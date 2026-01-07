@@ -299,12 +299,19 @@
         };
     }
 
-    function deletarUm(id) { if(confirm("Excluir?")) db.transaction(["apreensoes"], "readwrite").objectStore("apreensoes").delete(id).onsuccess = () => renderizar(); }
-    function limparTudo() { if(confirm("Apagar TUDO?")) db.transaction(["apreensoes"], "readwrite").objectStore("apreensoes").clear().onsuccess = () => location.reload(); }
-<script>
+    function deletarUm(id) { 
+        if(confirm("Excluir?")) db.transaction(["apreensoes"], "readwrite").objectStore("apreensoes").delete(id).onsuccess = () => renderizar(); 
+    }
+
+    function limparTudo() { 
+        if(confirm("Apagar TUDO?")) db.transaction(["apreensoes"], "readwrite").objectStore("apreensoes").clear().onsuccess = () => location.reload(); 
+    }
+</script> <script>
+  // REGISTRO DO SERVICE WORKER PARA MODO OFFLINE
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log("Modo Offline Ativado!"));
+      .then(() => console.log("Modo Offline Ativado!"))
+      .catch(err => console.log("Erro ao registrar SW:", err));
   }
 </script>
 </body>
