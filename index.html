@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icone-192.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#5a7d6c">
+    <title>SCA - Minas Novas</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        :root { --primary: #5a7d6c; --ios-bg: #f2f2f7; --accent: #007aff; }
+        body { background-color: var(--ios-bg); font-family: -apple-system, system-ui, sans-serif; padding-bottom: 40px; }
+        .navbar-mn { background: #fff; padding: 12px 16px; border-bottom: 0.5px solid #c6c6c8; position: sticky; top: 0; z-index: 1000; display: flex; justify-content: space-between; align-items: center; }
+        .navbar-brand-text { font-weight: 700; color: var(--primary); font-size: 0.95rem; }
+        .ios-card { background: white; border-radius: 12px; margin: 12px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); border: none; }
+        .section-title { font-size: 0.7rem; font-weight: 600; color: #8e8e93; text-transform: uppercase; margin: 10px 0 5px 15px; }
+        .form-control, .form-select { border-radius: 10px; border: 1px solid #e5e5ea; padding: 10px; font-size: 16px !important; background-color: #fff; }
+        .btn-save { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 700; width: 100%; font-size: 17px; margin-top: 10px; transition: 0.2s; }
+        .animal-item { background: white; border-radius: 12px; padding: 12px; margin: 0 12px 10px 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .photo-grid-list { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin: 10px 0; }
+        .img-thumb-small { width: 100%; height: 60px; object-fit: cover; border-radius: 6px; background: #eee; border: 0.5px solid #ddd; }
+        .btn-action { border: none; border-radius: 8px; padding: 7px 12px; font-size: 12px; font-weight: 700; margin-right: 5px; margin-top: 8px; }
+        .btn-zap { background-color: #e8f8f0; color: #34c759; }
+        .btn-pdf { background-color: #fff0f0; color: #ff3b30; }
+        .btn-header { background: transparent; border: 1.2px solid var(--primary); color: var(--primary); font-size: 10px; font-weight: 700; border-radius: 6px; padding: 5px 8px; }
+        .upload-area { border: 2px dashed #d1d1d6; border-radius: 10px; padding: 20px; text-align: center; color: var(--primary); background: #fafafa; cursor: pointer; font-weight: 600; }
+        .preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+        .preview-item { position: relative; width: 100%; padding-top: 100%; }
+        .preview-item img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
+        .btn-del-photo { position: absolute; top: -5px; right: -5px; background: #ff3b30; color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 14px; font-weight: bold; z-index: 10; }
+        .protocol-tag { background: #f2f2f7; color: #8e8e93; font-weight: 700; padding: 3px 8px; border-radius: 5px; font-size: 10px; margin-bottom: 4px; display: inline-block; }
+        footer { font-size: 10px; text-align: center; color: #8e8e93; padding: 20px; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar-mn">
+    <div class="navbar-brand-text">SCA - MINAS NOVAS</div>
+    <div class="d-flex gap-2">
+        <button onclick="gerarRelatorioGeralSuperior()" class="btn-header">RELATÓRIO GERAL</button>
+        <button onclick="limparTudo()" class="btn btn-sm text-danger p-0 fw-bold" style="font-size: 10px;">LIMPAR</button>
+    </div>
+</nav>
+
+<div class="container-fluid p-0 mt-2">
+    <div class="ios-card">
+        <form id="formSca">
+            <div class="section-title" style="margin-left: 0;">Dados do Agente</div>
+            <input type="text" id="fiscal" class="form-control mb-3" placeholder="Nome do Agente Fiscal" required>
+            
+            <div class="section-title" style="margin-left: 0;">Características do Animal</div>
+            <div class="row g-2 mb-3">
+                <div class="col-6"><select id="especie" class="form-select"><option>Equino</option><option>Bovino</option><option>Muár</option><option>Asinino</option><option>Outro</option></select></div>
+                <div class="col-6"><select id="sexo" class="form-select"><option>Macho</option><option>Fêmea</option></select></div>
+                <div class="col-6">
+                    <select id="pelagem" class="form-select">
+                        <option disabled style="background:#eee; font-weight:bold;">-- EQUINOS --</option>
+                        <option>Alazão</option>
+                        <option>Baio</option>
+                        <option>Castanho</option>
+                        <option>Pampa</option>
+                        <option>Preto</option>
+                        <option>Tordilho</option>
+                        <option>Zaino</option>
+                        <option disabled style="background:#eee; font-weight:bold;">-- BOVINOS --</option>
+                        <option>Amarelo (Baio)</option>
+                        <option>Bragado</option>
+                        <option>Branco</option>
+                        <option>Chumbado</option>
+                        <option>Lutano</option>
+                        <option>Osco</option>
+                        <option>Pintado</option>
+                        <option>Preto e Branco (Holandês)</option>
+                        <option>Rosilho (Bovino)</option>
+                        <option>Vermelho</option>
+                        <option>Zebu (Cinza/Branco)</option>
+                        <option>Outra</option>
+                    </select>
+                </div>
+                <div class="col-6"><select id="condicao" class="form-select"><option>Saudável</option><option>Ferido</option><option>Caquético</option><option>Debilitado</option><option>Óbito</option></select></div>
+                <div class="col-12"><select id="marcas" class="form-select"><option>S/ Marcas</option><option>Marca Fogo</option><option>Brinco (Bovino)</option><option>Ferrageado</option><option>Cicatriz</option><option>Sinal na Orelha</option></select></div>
+            </div>
+
+            <div class="section-title" style="margin-left: 0;">Local da Ocorrência</div>
+            <input type="text" id="local" class="form-control mb-2" placeholder="Rua / Rodovia / KM" required>
+            <input type="text" id="referencia" class="form-control mb-3" placeholder="Ponto de Referência (Opcional)">
+
+            <div class="section-title" style="margin-left: 0;">Observações Adicionais</div>
+            <textarea id="observacoes" class="form-control mb-3" rows="3" placeholder="Comportamento, chifres (bovinos), marcas de proprietário..."></textarea>
+
+            <div class="section-title" style="margin-left: 0;">Evidências (Fotos)</div>
+            <div class="upload-area" onclick="document.getElementById('foto').click()">
+                <div>📸 TIRAR FOTOS OU GALERIA</div>
+                <input type="file" id="foto" hidden accept="image/*" multiple>
+            </div>
+            <div id="preview-grid" class="preview-grid"></div>
+
+            <button type="submit" id="btnSubmit" class="btn-save shadow-sm">SALVAR APREENSÃO</button>
+        </form>
+    </div>
+
+    <div class="section-title">Últimos Registros</div>
+    <div id="listaApreensoes"></div>
+</div>
+
+<footer>© 2026 PREFEITURA DE MINAS NOVAS</footer>
+
+<script>
+    const { jsPDF } = window.jspdf;
+    let db;
+    let fotosArray = [];
+
+    const request = indexedDB.open("SCAMinasNovasDB", 6);
+    request.onupgradeneeded = e => {
+        db = e.target.result;
+        if (!db.objectStoreNames.contains("apreensoes")) {
+            db.createObjectStore("apreensoes", { keyPath: "id", autoIncrement: true });
+        }
+    };
+    request.onsuccess = e => { db = e.target.result; renderizar(); };
+
+    document.getElementById('foto').addEventListener('change', e => {
+        const files = Array.from(e.target.files);
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = event => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 800;
+                    let width = img.width, height = img.height;
+                    if (width > height) { if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; } }
+                    else { if (height > MAX_WIDTH) { width *= MAX_WIDTH / height; height = MAX_WIDTH; } }
+                    canvas.width = width; canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    fotosArray.push(canvas.toDataURL('image/jpeg', 0.7));
+                    atualizarPreview();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+    });
+
+    function atualizarPreview() {
+        const grid = document.getElementById('preview-grid');
+        grid.innerHTML = "";
+        fotosArray.forEach((src, index) => {
+            grid.innerHTML += `<div class="preview-item"><img src="${src}"><button type="button" class="btn-del-photo" onclick="removerFoto(${index})">×</button></div>`;
+        });
+    }
+
+    function removerFoto(index) { fotosArray.splice(index, 1); atualizarPreview(); }
+
+    document.getElementById('formSca').addEventListener('submit', function(e) {
+        e.preventDefault();
+        if(fotosArray.length === 0) return alert("Adicione pelo menos uma foto.");
+        const btn = document.getElementById('btnSubmit');
+        btn.disabled = true; btn.innerText = "GRAVANDO...";
+
+        const d = new Date();
+        const registro = {
+            protocolo: `SCA-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}-${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}${String(d.getSeconds()).padStart(2,'0')}`,
+            fiscal: document.getElementById('fiscal').value,
+            especie: document.getElementById('especie').value,
+            sexo: document.getElementById('sexo').value,
+            pelagem: document.getElementById('pelagem').value,
+            marcas: document.getElementById('marcas').value,
+            condicao: document.getElementById('condicao').value,
+            local: document.getElementById('local').value,
+            referencia: document.getElementById('referencia').value || "Não informado",
+            observacoes: document.getElementById('observacoes').value || "Nenhuma observação",
+            fotos: fotosArray,
+            data: d.toLocaleString('pt-BR')
+        };
+
+        const transaction = db.transaction(["apreensoes"], "readwrite");
+        transaction.objectStore("apreensoes").add(registro).onsuccess = () => location.reload();
+    });
+
+    function renderizar() {
+        const container = document.getElementById('listaApreensoes');
+        container.innerHTML = "";
+        const store = db.transaction("apreensoes", "readonly").objectStore("apreensoes");
+        store.openCursor(null, 'prev').onsuccess = e => {
+            const cursor = e.target.result;
+            if (cursor) {
+                const a = cursor.value;
+                const div = document.createElement('div');
+                div.className = 'animal-item';
+                div.innerHTML = `
+                    <div style="flex:1">
+                        <span class="protocol-tag">${a.protocolo}</span>
+                        <div style="font-weight:700; font-size:15px; color:#333;">${a.especie} • ${a.pelagem} (${a.condicao})</div>
+                        <div style="font-size:12px; color:#666;">📍 ${a.local}</div>
+                        <div class="photo-grid-list">${a.fotos.map(f => `<img src="${f}" class="img-thumb-small">`).join('')}</div>
+                        <div class="d-flex">
+                            <button onclick="whatsapp(${a.id})" class="btn-action btn-zap">ZAP</button>
+                            <button onclick="gerarPDFIndividual(${a.id})" class="btn-action btn-pdf">PDF</button>
+                            <button onclick="deletarUm(${a.id})" class="btn-action" style="background:#eee; color:#333">✕</button>
+                        </div>
+                    </div>`;
+                container.appendChild(div);
+                cursor.continue();
+            }
+        };
+    }
+
+    function whatsapp(id) {
+        const store = db.transaction("apreensoes", "readonly").objectStore("apreensoes");
+        store.get(id).onsuccess = e => {
+            const a = e.target.result;
+            const obsText = a.observacoes !== "Nenhuma observação" ? `%0A📝 *Obs:* ${a.observacoes}` : "";
+            const txt = 
+                `*PREFEITURA DE MINAS NOVAS - MG*%0A` +
+                `*SISTEMA DE CONTROLE DE APREENSÃO (SCA)*%0A%0A` +
+                `📌 *AUTO DE APREENSÃO:* ${a.protocolo}%0A` +
+                `----------------------------------------%0A` +
+                `🐾 *Espécie:* ${a.especie}%0A` +
+                `🎨 *Pelagem:* ${a.pelagem}%0A` +
+                `🏥 *Condições:* ${a.condicao}%0A` +
+                `🏷️ *Marcas:* ${a.marcas}%0A` +
+                `📍 *Localização:* ${a.local}${obsText}%0A` +
+                `🗓️ *Data:* ${a.data}%0A` +
+                `----------------------------------------%0A` +
+                `👮 *Fiscal:* ${a.fiscal}%0A%0A` +
+                `_Conforme Lei Municipal nº 2.626/2025._`;
+            window.open(`https://wa.me/?text=${txt}`, '_blank');
+        };
+    }
+
+    function gerarPDFIndividual(id) {
+        const store = db.transaction("apreensoes", "readonly").objectStore("apreensoes");
+        store.get(id).onsuccess = e => {
+            const a = e.target.result;
+            const doc = new jsPDF();
+            doc.setFontSize(14); doc.text("PREFEITURA MUNICIPAL DE MINAS NOVAS - MG", 105, 15, {align: 'center'});
+            doc.setFontSize(11); doc.text("COMPROVANTE DE APREENSÃO DE ANIMAL - SCA", 105, 22, {align: 'center'});
+            doc.autoTable({
+                startY: 30,
+                head: [['Identificação Técnica', 'Detalhes']],
+                body: [
+                    ["Protocolo", a.protocolo], ["Data/Hora", a.data],
+                    ["Fiscal Responsável", a.fiscal], ["Espécie", a.especie],
+                    ["Sexo", a.sexo], ["Pelagem", a.pelagem],
+                    ["Condição Animal", a.condicao], ["Localização", a.local],
+                    ["Marcas/Sinais", a.marcas], ["Observações", a.observacoes]
+                ],
+                theme: 'grid', styles: { fontSize: 10 }
+            });
+            const textoLegal = "O(s) animal(is) acima descrito(s) será(ão) encaminhado(s) ao Depósito da contratada; não havendo interesse do proprietário(a) dentro do prazo de 15 (quinze) dias úteis, a autoridade competente poderá destinar o(s) animal(is) conforme preconiza a Lei Municipal nº 2.626/2025, supracitada. Para constar, lavro o presente AUTO em 2 (duas) vias de igual teor e forma.";
+            let finalY = doc.lastAutoTable.finalY + 10;
+            doc.setFontSize(9);
+            const splitText = doc.splitTextToSize(textoLegal, 180);
+            doc.text(splitText, 14, finalY);
+            let assY = finalY + (splitText.length * 5) + 20;
+            doc.line(60, assY, 150, assY);
+            doc.setFontSize(10);
+            doc.text(a.fiscal.toUpperCase(), 105, assY + 5, {align: 'center'});
+            doc.setFontSize(8);
+            doc.text("Responsável pela Apreensão", 105, assY + 10, {align: 'center'});
+            let y = assY + 25;
+            doc.text("EVIDÊNCIAS FOTOGRÁFICAS:", 14, y);
+            y += 5;
+            a.fotos.forEach((foto) => {
+                if (y > 230) { doc.addPage(); y = 20; }
+                doc.addImage(foto, 'JPEG', 14, y, 90, 65);
+                y += 70;
+            });
+            doc.save(`SCA_Individual_${a.protocolo}.pdf`);
+        };
+    }
+
+    async function gerarRelatorioGeralSuperior() {
+        const store = db.transaction("apreensoes", "readonly").objectStore("apreensoes");
+        const todos = [];
+        store.openCursor().onsuccess = e => {
+            const cursor = e.target.result;
+            if (cursor) { todos.push(cursor.value); cursor.continue(); }
+            else {
+                if (!todos.length) return alert("Sem dados.");
+                const doc = new jsPDF();
+                doc.setFontSize(16); doc.text("RELATÓRIO GERAL DE APREENSÕES - MINAS NOVAS", 105, 20, {align: 'center'});
+                const rows = todos.map((a, i) => [i + 1, a.protocolo, a.data, a.especie, a.pelagem]);
+                doc.autoTable({ 
+                    startY: 35, head: [['#', 'Protocolo', 'Data', 'Espécie', 'Pelagem']], body: rows,
+                    headStyles: { fillColor: [90, 125, 108] }, theme: 'striped'
+                });
+                doc.save("Relatorio_Geral_SCA.pdf");
+            }
+        };
+    }
+
+    function deletarUm(id) { if(confirm("Excluir?")) db.transaction(["apreensoes"], "readwrite").objectStore("apreensoes").delete(id).onsuccess = () => renderizar(); }
+    function limparTudo() { if(confirm("Apagar TUDO?")) db.transaction(["apreensoes"], "readwrite").objectStore("apreensoes").clear().onsuccess = () => location.reload(); }
+</script>
+</body>
+</html>
