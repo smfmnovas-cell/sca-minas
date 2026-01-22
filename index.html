@@ -52,8 +52,9 @@
 <div class="container-fluid p-0 mt-2">
     <div class="ios-card">
         <form id="formSca">
-            <div class="section-title" style="margin-left: 0;">Dados do Agente</div>
-            <input type="text" id="fiscal" class="form-control mb-3" placeholder="Nome do Agente Fiscal" required>
+            <div class="section-title" style="margin-left: 0;">Dados da Apreensão</div>
+            <input type="text" id="fiscal" class="form-control mb-2" placeholder="Nome do Agente Fiscal" required>
+            <input type="date" id="dataApreensao" class="form-control mb-3" required>
             
             <div class="section-title" style="margin-left: 0;">Características do Animal</div>
             <div class="row g-2 mb-3">
@@ -117,6 +118,9 @@
     let db;
     let fotosArray = [];
 
+    // Define a data de hoje como padrão no input
+    document.getElementById('dataApreensao').valueAsDate = new Date();
+
     const request = indexedDB.open("SCAMinasNovasDB", 6);
     request.onupgradeneeded = e => {
         db = e.target.result;
@@ -167,6 +171,9 @@
         btn.disabled = true; btn.innerText = "GRAVANDO...";
 
         const d = new Date();
+        const dataInput = document.getElementById('dataApreensao').value.split('-');
+        const dataFormatada = `${dataInput[2]}/${dataInput[1]}/${dataInput[0]}`;
+
         const registro = {
             protocolo: `SCA-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}-${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}${String(d.getSeconds()).padStart(2,'0')}`,
             fiscal: document.getElementById('fiscal').value,
@@ -179,7 +186,7 @@
             referencia: document.getElementById('referencia').value || "Não informado",
             observacoes: document.getElementById('observacoes').value || "Nenhuma observação",
             fotos: fotosArray,
-            data: d.toLocaleString('pt-BR')
+            data: dataFormatada // Salva a data do input
         };
 
         const transaction = db.transaction(["apreensoes"], "readwrite");
@@ -200,7 +207,7 @@
                     <div style="flex:1">
                         <span class="protocol-tag">${a.protocolo}</span>
                         <div style="font-weight:700; font-size:15px; color:#333;">${a.especie} • ${a.pelagem} (${a.condicao})</div>
-                        <div style="font-size:12px; color:#666;">📍 ${a.local}</div>
+                        <div style="font-size:12px; color:#666;">📅 Data: ${a.data} | 📍 ${a.local}</div>
                         <div class="photo-grid-list">${a.fotos.map(f => `<img src="${f}" class="img-thumb-small">`).join('')}</div>
                         <div class="d-flex">
                             <button onclick="whatsapp(${a.id})" class="btn-action btn-whatsapp">WHATSAPP</button>
@@ -229,7 +236,7 @@
                 `🏥 *Condições:* ${a.condicao}%0A` +
                 `🏷️ *Marcas:* ${a.marcas}%0A` +
                 `📍 *Localização:* ${a.local}${obsText}%0A` +
-                `🗓️ *Data:* ${a.data}%0A` +
+                `🗓️ *Data da Apreensão:* ${a.data}%0A` +
                 `----------------------------------------%0A` +
                 `👮 *Fiscal:* ${a.fiscal}%0A%0A` +
                 `_Conforme Lei Municipal nº 2.626/2025._`;
@@ -248,7 +255,7 @@
                 startY: 30,
                 head: [['Identificação Técnica', 'Detalhes']],
                 body: [
-                    ["Protocolo", a.protocolo], ["Data/Hora", a.data],
+                    ["Protocolo", a.protocolo], ["Data da Apreensão", a.data],
                     ["Fiscal Responsável", a.fiscal], ["Espécie", a.especie],
                     ["Sexo", a.sexo], ["Pelagem", a.pelagem],
                     ["Condição Animal", a.condicao], ["Localização", a.local],
@@ -291,7 +298,7 @@
                 doc.setFontSize(16); doc.text("RELATÓRIO GERAL DE APREENSÕES - MINAS NOVAS", 105, 20, {align: 'center'});
                 const rows = todos.map((a, i) => [i + 1, a.protocolo, a.data, a.especie, a.pelagem]);
                 doc.autoTable({ 
-                    startY: 35, head: [['#', 'Protocolo', 'Data', 'Espécie', 'Pelagem']], body: rows,
+                    startY: 35, head: [['#', 'Protocolo', 'Data Apreensão', 'Espécie', 'Pelagem']], body: rows,
                     headStyles: { fillColor: [90, 125, 108] }, theme: 'striped'
                 });
                 doc.save("Relatorio_Geral_SCA.pdf");
@@ -306,16 +313,6 @@
     function limparTudo() { 
         if(confirm("Apagar TUDO?")) db.transaction(["apreensoes"], "readwrite").objectStore("apreensoes").clear().onsuccess = () => location.reload(); 
     }
-</script> <script>
-  // REGISTRO DO SERVICE WORKER PARA MODO OFFLINE
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log("Modo Offline Ativado!"))
-      .catch(err => console.log("Erro ao registrar SW:", err));
-  }
 </script>
 </body>
 </html>
-
-
-
